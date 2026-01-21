@@ -1,0 +1,137 @@
+# MiR Fleet Adapter Configuration for EGH Hospital Logistics
+# Place this file at: egh/config/mir_config.yaml
+
+# ROS2 node names
+node_names:
+  robot_command_handle: "rmf_mir_fleet_command_handler"
+  fleet_state_publisher: "rmf_mir_fleet_state_publisher"
+  rmf_fleet_adapter: "MirFleetAdapter"
+
+# Coordinate system conversions between RMF and MiR
+conversions:
+  # CRITICAL: You need to measure at least 3 reference points that exist in both
+  # RMF coordinates (from egh.building.yaml) and MiR map coordinates
+  # Example: Measure the charger location, pickup point, and dropoff point in both systems
+  reference_coordinates:
+    L1:  # Must match map name in egh.building.yaml
+      rmf: [[630.5, 1386.5],   # Example: deliverybot_charger in RMF coords
+            [533.1, 940.6],     # Example: pickup_point in RMF coords
+            [1250.4, 1673.0]]   # Example: dropoff_point in RMF coords
+      mir: [[0.0, 0.0],         # TODO: Replace with actual MiR coordinates for charger
+            [1.0, 5.0],         # TODO: Replace with actual MiR coordinates for pickup
+            [10.0, 3.0]]        # TODO: Replace with actual MiR coordinates for dropoff
+    # Add L2 and L3 if you plan to use multiple floors
+    # L2:
+    #   rmf: [[x1, y1], [x2, y2], [x3, y3]]
+    #   mir: [[x1, y1], [x2, y2], [x3, y3]]
+
+  # Map name conversion: RMF map name -> MiR map name
+  maps:
+    L1: "Level 1"  # TODO: Replace "Level 1" with the actual map name stored on your MiR robot
+    L2: "Level 2"  # Add if needed
+    L3: "Level 3"  # Add if needed
+
+  # Mission names that must exist on MiR robot
+  # These missions will be auto-created if you provide missions_json parameter
+  missions:
+    move: "rmf_move"                    # Basic movement mission
+    dock_and_charge: "rmf_dock_and_charge"  # Charging mission
+    localize: "rmf_localize"            # Map switching mission
+    go_to: "rmf_move_to_position"       # Move to named position
+
+  # Lift/elevator positions (if you use lifts between floors)
+  lift_positions:
+    # Example from your building.yaml if you have a lift named "Lift_1"
+    # Lift_1:
+    #   L1:
+    #     name: "Level_1_Lift"  # MiR position name for lift on L1
+    #   L2:
+    #     name: "Level_2_Lift"  # MiR position name for lift on L2
+
+  # Charger marker type (must match marker type name on MiR)
+  marker_types:
+    charger: "Charger"  # TODO: Replace with your MiR charger marker type name
+
+  # Custom docking offsets (optional, for precise docking)
+  # docking_offsets:
+  #   marker_name_on_mir:
+  #     rmf_waypoint_name: [x_offset, y_offset, orientation_offset]
+
+# RMF Fleet Configuration
+rmf_fleet:
+  name: "deliveryRobot"  # Must match your fleet name
+  limits:
+    # TODO: Adjust these based on your actual MiR robot model (100/200/250/500/1000)
+    linear: [0.7, 0.75]   # [max_velocity (m/s), max_acceleration (m/s²)]
+    angular: [0.6, 2.0]   # [max_angular_velocity (rad/s), max_angular_acceleration (rad/s²)]
+  profile:
+    footprint: 0.6        # Robot radius in meters (MiR100: ~0.45m, MiR250: ~0.6m)
+    vicinity: 0.8         # Safety clearance radius
+  reversible: False       # Set True if robot can drive backwards efficiently
+
+  # Battery configuration - adjust based on your MiR model
+  battery_system:
+    voltage: 24.0         # MiR typically uses 24V system
+    capacity: 40.0        # Battery capacity in Ahr (check your robot specs)
+    charging_current: 8.8 # Charging current in Amps
+
+  # Physical properties (optional, for better battery prediction)
+  mechanical_system:
+    mass: 60.0            # Robot mass in kg (MiR100: ~60kg, MiR250: ~100kg)
+    moment_of_inertia: 20.0
+    friction_coefficient: 0.20
+
+  # Power consumption estimates
+  ambient_system:
+    power: 20.0           # Idle power consumption in Watts
+  tool_system:
+    power: 50.0           # Additional power when carrying load
+
+  # Battery management
+  recharge_threshold: 0.20  # Start charging when battery drops below 20%
+  recharge_soc: 0.90        # Charge until 90% full
+  account_for_battery_drain: True
+
+  # Fleet state publishing
+  publish_fleet_state: 1.0  # Frequency in Hz
+
+  # Task capabilities
+  task_capabilities:
+    loop: True            # Can perform patrol/loop tasks
+    delivery: False       # Set True if you implement delivery actions
+    clean: False
+
+  finishing_request: "charge"  # Options: "charge", "park", "nothing"
+
+  # Custom actions (empty for basic patrol)
+  actions: []
+
+  # Robot definitions
+  robots:
+    mir_1:  # Robot name (must be unique)
+      charger: "deliverybot_charger"  # Must match waypoint name in nav_graph with is_charger: true
+      max_merge_waypoint_distance: 0.25
+      max_merge_lane_distance: 1.0
+      mir_config:
+        base_url: "http://192.168.1.100/api/v2.0.0/"  # TODO: Replace with your MiR robot IP
+        user: "application/json"
+        password: "Basic YOUR_BASE64_ENCODED_CREDENTIALS"  # TODO: Get from MiR robot web interface
+        # To get password: Go to MiR robot web UI -> System -> API -> Copy the Basic Auth header value
+
+  # Add more robots if needed:
+  # mir_2:
+  #   charger: "deliverybot_charger"
+  #   mir_config:
+  #     base_url: "http://192.168.1.101/api/v2.0.0/"
+  #     user: "application/json"
+  #     password: "Basic ANOTHER_BASE64_HASH"
+
+  robot_state_update_frequency: 1  # Update frequency in Hz
+  debug: False  # Set True for verbose logging
+
+# Plugins configuration (optional, not needed for basic patrol)
+# plugins:
+#   rmf_cart_delivery:
+#     module: "fleet_adapter_mir_actions.rmf_cart_delivery"
+#     actions: ["delivery_pickup", "delivery_dropoff"]
+#     # ... additional config

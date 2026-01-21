@@ -1,0 +1,41 @@
+<!-- Modified EGH Launch File with MiR Fleet Adapter -->
+<!-- This shows how to modify your egh/launch/egh.launch.xml to include MiR adapter -->
+
+<launch>
+  <!-- Include common RMF components (traffic schedule, etc.) -->
+  <include file="$(find-pkg-share egh)/launch/common.launch.xml">
+    <arg name="use_sim_time" value="false"/>
+  </include>
+
+  <!-- Your existing components... -->
+
+  <!-- ============================================ -->
+  <!-- MiR Fleet Adapter (NEW) -->
+  <!-- ============================================ -->
+  <group>
+    <arg name="mir_config_file"
+         default="$(find-pkg-share egh)/config/mir_config.yaml"/>
+
+    <arg name="nav_graph_file"
+         default="$(find-pkg-share egh_maps)/maps/egh/nav_graphs/0.yaml"/>
+
+    <!-- Optional: Path to missions JSON for auto-creating MiR missions -->
+    <arg name="mir_missions_json"
+         default="$(find-pkg-share fleet_adapter_mir)/missions/rmf_missions.json"/>
+
+    <!-- Launch MiR Fleet Adapter -->
+    <executable
+          cmd="ros2 run fleet_adapter_mir fleet_adapter_mir
+               -c $(var mir_config_file)
+               -n $(var nav_graph_file)
+               -r $(var mir_missions_json)"
+          output="screen"
+          shell="true"/>
+  </group>
+
+  <!-- Note: Comment out or remove the simulation fleet adapter when using real MiR robots -->
+  <!-- <include file="$(find-pkg-share egh_sim_fleet_adapter)/launch/fleet_adapter.launch.xml"> -->
+  <!--   ... -->
+  <!-- </include> -->
+
+</launch>

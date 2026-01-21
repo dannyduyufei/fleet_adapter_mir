@@ -1,0 +1,42 @@
+<!-- MiR Fleet Adapter Launch File -->
+<!-- Place this at: egh_adapters/fleet_adapter_mir/launch/fleet_adapter_mir.launch.xml -->
+
+<launch>
+  <!-- Fleet adapter configuration file -->
+  <arg name="config_file"
+       description="Path to MiR fleet adapter configuration YAML file"/>
+
+  <!-- Navigation graph file (generated from building.yaml or separate) -->
+  <arg name="nav_graph_file"
+       description="Path to navigation graph YAML file"/>
+
+  <!-- Optional: Missions JSON file for auto-creating MiR missions -->
+  <arg name="missions_json"
+       default=""
+       description="Path to RMF missions JSON file (optional)"/>
+
+  <!-- Use simulation time (false for real robots) -->
+  <arg name="use_sim_time"
+       default="false"
+       description="Use simulation time"/>
+
+  <!-- MiR Fleet Adapter Node -->
+  <node pkg="fleet_adapter_mir"
+        exec="fleet_adapter_mir"
+        name="fleet_adapter_mir"
+        output="screen">
+
+    <!-- Pass configuration file -->
+    <param name="config_file" value="$(var config_file)"/>
+
+    <!-- Pass navigation graph -->
+    <param name="nav_graph" value="$(var nav_graph_file)"/>
+
+    <!-- Optional missions JSON -->
+    <param name="missions_json" value="$(var missions_json)" if="$(eval '$(var missions_json)' != '')"/>
+
+    <!-- Use sim time setting -->
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+  </node>
+
+</launch>

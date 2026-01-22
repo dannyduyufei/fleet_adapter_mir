@@ -1,0 +1,59 @@
+<?xml version='1.0' ?>
+<!-- Place this file at: egh_adapters/fleet_adapter_mir/launch/fleet_adapter_mir.launch.xml -->
+<launch>
+  <!-- Arguments -->
+  <arg name="use_sim_time" default="false" description="Use simulation time"/>
+  <arg name="config_file" description="Path to MiR fleet adapter config YAML"/>
+  <arg name="nav_graph_file" description="Path to navigation graph YAML"/>
+  <arg name="rmf_missions_file" default="" description="Path to RMF missions JSON (optional)"/>
+  <arg name="mock" default="false" description="Run in mock mode (no real robot)"/>
+
+  <!-- Launch fleet adapter with missions file -->
+  <executable
+    cmd="ros2 run fleet_adapter_mir fleet_adapter_mir
+         -c $(var config_file)
+         -n $(var nav_graph_file)
+         -r $(var rmf_missions_file)"
+    output="screen"
+    shell="true"
+    if="$(eval '$(var rmf_missions_file)' != '' and '$(var mock)' == 'false')">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+  </executable>
+
+  <!-- Launch fleet adapter without missions file -->
+  <executable
+    cmd="ros2 run fleet_adapter_mir fleet_adapter_mir
+         -c $(var config_file)
+         -n $(var nav_graph_file)"
+    output="screen"
+    shell="true"
+    if="$(eval '$(var rmf_missions_file)' == '' and '$(var mock)' == 'false')">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+  </executable>
+
+  <!-- Launch fleet adapter in mock mode with missions -->
+  <executable
+    cmd="ros2 run fleet_adapter_mir fleet_adapter_mir
+         -c $(var config_file)
+         -n $(var nav_graph_file)
+         -r $(var rmf_missions_file)
+         --mock"
+    output="screen"
+    shell="true"
+    if="$(eval '$(var rmf_missions_file)' != '' and '$(var mock)' == 'true')">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+  </executable>
+
+  <!-- Launch fleet adapter in mock mode without missions -->
+  <executable
+    cmd="ros2 run fleet_adapter_mir fleet_adapter_mir
+         -c $(var config_file)
+         -n $(var nav_graph_file)
+         --mock"
+    output="screen"
+    shell="true"
+    if="$(eval '$(var rmf_missions_file)' == '' and '$(var mock)' == 'true')">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+  </executable>
+
+</launch>
